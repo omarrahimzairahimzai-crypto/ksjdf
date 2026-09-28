@@ -1,0 +1,43 @@
+name: Windows RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Show Tailscale Device
+        shell: powershell
+        run: |
+          Write-Host "===== TAILSCALE STATUS ====="
+          tailscale status
+
+          Write-Host ""
+          Write-Host "===== TAILSCALE IP ====="
+
+          $ip = (tailscale ip -4).Trim()
+
+          if ([string]::IsNullOrWhiteSpace($ip)) {
+              Write-Error "Tailscale IP was not created."
+              exit 1
+          }
+
+          Write-Host "Tailscale IP: $ip"
+          Write-Host "RDP Address : $ip`:3389"
+
+      - name: Keep Online
+        shell: powershell
+        run: |
+          while ($true) {
+              Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Tailscale is ONLINE"
+              Start-Sleep -Seconds 60
+          }
